@@ -37,16 +37,16 @@ class Dot:
 
 
 class Ship:
-    def __init__(self, bow, l, o):
+    def __init__(self, bow, length, o):
         self.bow = bow
-        self.l = l
+        self.length = length
         self.o = o
-        self.lives = l
+        self.lives = length
 
     @property
     def dots(self):
         ship_dots = []
-        for i in range(self.l):
+        for i in range(self.length):
             cur_x = self.bow.x
             cur_y = self.bow.y
 
@@ -60,9 +60,6 @@ class Ship:
 
         return ship_dots
 
-    def shooten(self, shot):
-        return shot in self.dots
-
 
 class Board:
     def __init__(self, hidden=False, size=6):
@@ -73,16 +70,16 @@ class Board:
 
         self.field = [["O"] * size for _ in range(size)]
 
-        self.busy = []
+        self.occupied = []
         self.ships = []
 
     def add_ship(self, ship):
         for d in ship.dots:
-            if self.out(d) or d in self.busy:
+            if self.out(d) or d in self.occupied:
                 raise BoardWrongShipException()
         for d in ship.dots:
             self.field[d.x][d.y] = "■"
-            self.busy.append(d)
+            self.occupied.append(d)
 
         self.ships.append(ship)
         self.contour(ship)
@@ -96,10 +93,10 @@ class Board:
         for d in ship.dots:
             for dx, dy in near:
                 cur = Dot(d.x + dx, d.y + dy)
-                if not (self.out(cur)) and cur not in self.busy:
+                if not (self.out(cur)) and cur not in self.occupied:
                     if verb:
                         self.field[cur.x][cur.y] = "."
-                    self.busy.append(cur)
+                    self.occupied.append(cur)
 
     def __str__(self):
         res = ""
@@ -118,10 +115,10 @@ class Board:
         if self.out(d):
             raise BoardOutException()
 
-        if d in self.busy:
+        if d in self.occupied:
             raise BoardUsedException()
 
-        self.busy.append(d)
+        self.occupied.append(d)
 
         for ship in self.ships:
             if d in ship.dots:
@@ -131,17 +128,17 @@ class Board:
                     self.count += 1
                     self.contour(ship, verb=True)
                     print("Убит!")
-                    return False
                 else:
                     print("Ранен!")
-                    return True
+
+                return True
 
         self.field[d.x][d.y] = "."
         print("Мимо!")
         return False
 
     def begin(self):
-        self.busy = []
+        self.occupied = []
 
 
 class Player:
@@ -183,12 +180,12 @@ class User(Player):
 class Game:
     def __init__(self, size=6):
         self.size = size
-        pl = self.random_board()
-        co = self.random_board()
-        co.hidden = True
+        player_board = self.random_board()
+        comp_board = self.random_board()
+        comp_board.hidden = True
 
-        self.ai = AI(co, pl)
-        self.us = User(pl, co)
+        self.ai = AI(comp_board, player_board)
+        self.us = User(player_board, comp_board)
 
     def random_board(self):
         board = None
@@ -197,15 +194,15 @@ class Game:
         return board
 
     def random_place(self):
-        lens = [3, 2, 2, 1, 1, 1, 1]
+        lengths = [3, 2, 2, 1, 1, 1, 1]
         board = Board(size=self.size)
         attempts = 0
-        for l in lens:
+        for length in lengths:
             while True:
                 attempts += 1
                 if attempts > 2000:
                     return None
-                ship = Ship(Dot(randint(0, self.size), randint(0, self.size)), l, randint(0, 1))
+                ship = Ship(Dot(randint(0, self.size), randint(0, self.size)), length, randint(0, 1))
                 try:
                     board.add_ship(ship)
                     break
@@ -214,21 +211,23 @@ class Game:
         board.begin()
         return board
 
-    def greet(self):
-        print("    -------------------")
-        print("      Приветствуем вас  ")
-        print("          в игре       ")
-        print("        морской бой    ")
-        print("    -------------------")
+    @staticmethod
+    def greet():
+        print("-" * 27)
+        print(" Добро пожаловать на борт!")
+        print("        Приготовься,")
+        print(" мы собираемся вступить в")
+        print("        морской бой!")
+        print("-" * 27)
 
     def loop(self):
         num = 0
         while True:
             print("-" * 27)
-            print("Доска пользователя:")
+            print("    Доска пользователя:")
             print(self.us.board)
             print("-" * 27)
-            print("Доска компьютера:")
+            print("     Доска компьютера:")
             print(self.ai.board)
             print("-" * 27 + "\n")
 
