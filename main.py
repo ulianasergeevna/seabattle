@@ -133,7 +133,7 @@ class Board:
 
                 return True
 
-        self.field[d.x][d.y] = "."
+        self.field[d.x][d.y] = "Т"
         print("Мимо!")
         return False
 
@@ -217,7 +217,7 @@ class Game:
         print(" Добро пожаловать на борт!")
         print("        Приготовься,")
         print(" мы собираемся вступить в")
-        print("        морской бой!")
+        print("        МОРСКОЙ БОЙ!")
         print("-" * 27)
 
     def loop(self):
